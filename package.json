@@ -1,0 +1,10 @@
+{
+  "name": "chinook_music",
+  "version": "0.0.1",
+  "main": "server.js",
+  "repository": "",
+  "dependencies": {
+    "express": "4.x",
+    "body-parser": "^1.8.1"
+  }
+}

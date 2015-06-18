@@ -1,0 +1,107 @@
+var http = require('http');
+var express = require('express');
+var sqlite3 = require('sqlite3').verbose();
+var async = require("async");
+
+
+var router = express();
+var server = http.createServer(router);
+
+var db = new sqlite3.Database('Chinook_Sqlite.sqlite');
+
+//builds array of customers
+var customers = [];
+db.each("select CustomerId, FirstName, LastName, Email from Customer", function(err, row){
+    customers.push({CustomerId:row.CustomerId, FirstName:row.FirstName, LastName:row.LastName, Email:row.Email});
+  });
+  
+//should return an array of JSON objects having CustomerId, FirstName, LastName, and Email
+router.get('/customer', function(req, res){
+  // res.send(JSON.stringify(customers));
+  res.json(customers);
+});
+
+//should return a JSON object with all of the information about a customer
+router.route('/customer/:CustomerId')
+.get(function(req, res){
+  var id = req.params.CustomerId;
+  db.get("select * from Customer where CustomerId= " + id, function(err, row){
+    res.json({CustomerId:row.CustomerId, FirstName:row.FirstName, LastName:row.LastName, 
+              Company:row.Company, Address:row.Address, City:row.City, State:row.State, 
+              Country:row.Country, PostalCode:row.PostalCode, Phone:row.Phone, SupportRepId:row.SupportRepId});
+    });
+});
+
+
+
+//should return an array of JSON objects having InvoiceId, InvoiceDate, and Total.
+
+router.get('/customer/:CustomerId/invoice', function(req, res){
+      var invoices = [];
+      var customerId = req.params.CustomerId;
+        db.each("select InvoiceId, InvoiceDate, Total from Invoice where CustomerId= " + customerId, function(err, row){
+          invoices.push({InvoiceId:row.InvoiceId, InvoiceDate:row.InvoiceDate, Total:row.Total});
+        });
+        res.json(invoices);
+});
+
+// async.parallel([
+//     function(callback) { //This is the first task, and callback is its callback task
+//         db.each("select InvoiceId, InvoiceDate, Total from Invoice where CustomerId= " + customerId, function(err, row){
+//           invoices.push({InvoiceId:row.InvoiceId, InvoiceDate:row.InvoiceDate, Total:row.Total});
+//             //Now we have saved to the DB, so let's tell async that this task is done
+//         });
+//       callback();
+//     }
+// ], function(err) { //This is the final callback
+//     res.json(invoices)
+// });
+// });
+
+// async.parallel([
+//         //Load user to get userId first
+//         function(callback) {
+//           db.each("select InvoiceId, InvoiceDate, Total from Invoice where CustomerId= " + customerId, function(err, row){
+//           invoices.push({InvoiceId:row.InvoiceId, InvoiceDate:row.InvoiceDate, Total:row.Total});
+//             //Now we have saved to the DB, so let's tell async that this task is done
+//           });
+//           callback();
+//         },
+//         //Load posts (won't be called before task 1's "task callback" has been called)
+//         function(callback) {
+//             res.json(invoices);
+//         }
+//     ], function(err) { //This function gets called after the two tasks have called their "task callbacks"
+//         //Here locals will be populated with 'user' and 'posts'
+//     });
+// });
+
+//should return a JSON object having all information about that invoice plus the key 
+//InvoiceLines with value an array of JSON objects having TrackId, (track) Name,
+//(album) Title, (artist) Name, (genre) Name, UnitPrice, and Quantity
+router.get('/customer/:CustomerId/invoice/:InvoiceId', function(req, res){
+});
+
+// POST /customer/ should take in data about a new Customer, create the customer, 
+// and return the same as GET /customer/:CustomerId, most importantly the new CustomerId
+
+router.post('/customer/', function(req, res){
+  res.send("Should have created a news article... instead I sent this message");
+});
+
+
+// .put(function(req, res){
+//   res.json({updated: req.params.newsid});
+// })
+// .delete(function(req, res){
+//   res.send("deleted article "+req.params.newsid);
+// });
+
+
+
+
+server.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function(){
+  var addr = server.address();
+  console.log("Chat server listening at", addr.address + ":" + addr.port);
+});
+
